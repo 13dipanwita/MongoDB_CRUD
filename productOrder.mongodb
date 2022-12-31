@@ -1,0 +1,73 @@
+show dbs
+
+//Create a database "ProductOrder" and create collections
+use ('ProductOrder');
+db.createCollection('Product');
+db.createCollection('Inventory');
+db.createCollection('User');
+db.createCollection('Order');
+
+//Display the first 5 rows of product, inventory, user, and order collection.
+use ('ProductOrder');
+db.getCollection('Product').find({}).limit(5);
+db.getCollection('Inventory').find({}).limit(5);
+db.getCollection('User').find({}).limit(5);
+db.getCollection('Order').find({}).limit(5); 
+
+
+//Display the Unique Brand and Model names from the Product collection.
+use('ProductOrder');
+db.Product.distinct('brand');
+use('ProductOrder');
+db.Product.distinct('model');
+
+//Find the maximum and minimum price of the given products.
+use('ProductOrder');
+db.Product.aggregate([
+    { "$group":  {
+        "_id": null,
+        "Maximumprice": {"$max": "$price" },
+        "Minimumprice": {"$min": "$price" }
+    }}
+]);
+
+ //Display the quantity and last_updated date and time for sku "SNY-11001".
+use('ProductOrder');
+db.Inventory.find({"sku":"SNY-11001"});
+
+//List down the count of the total number of users whose role is identified as
+//'Supplier' from User collection
+use('ProductOrder');
+db.User.find({"role":"Supplier"}).count();
+
+// Display 'sku', 'code', 'price', 'brand' and 'warranty' information for the model
+//'Bravia-X'
+use('ProductOrder');
+db.Product.find({"model":"Bravia-X"},{sku:true,_id:false, code:true,price:true, brand:true, warranty:true});
+
+// Find all the information of Sony products which have an Price greater
+//than 1 lakh
+use('ProductOrder');
+db.Product.find({$and:[{"brand":"Sony"},{price:{$gt:100000}}]});
+
+// Find the total no of products by each Brand and sort them in descending
+//order
+use('ProductOrder');
+db.Product.aggregate([
+    {
+      $match: { }
+    },
+    {
+      $group: { _id: "$brand", count: { $sum: 1 } }
+    },
+     { 
+      $sort : { count : -1 } 
+    }
+]);
+
+// Find the total no of users by each role, sort them is descending order and
+//save the results in the temporary collection
+use('ProductOrder');
+db.User.aggregate([{$group: {_id:"$role", count: { $sum: 1}}},{$sort:{'count':-1}}]).forEach(function(myDocument) { db.temp.insert(myDocument); } );
+db.getCollectionNames();
+db.temp.find();
